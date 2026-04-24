@@ -631,10 +631,19 @@ public class LogicalScreen implements Screen {
 
             // Do not put control characters on the display
             if (!ch.isImage()) {
-                assert (ch.getChar() >= 0x20);
-                assert (ch.getChar() != 0x7F);
+                if (ch.getChar() < 0x20) {
+                    if (ch.getChar() == '\t') {
+                        // Treat tab as a space
+                        logical[X][Y].setTo(ch);
+                        logical[X][Y].setChar(' ');
+                    }
+                } else {
+                    assert (ch.getChar() != 0x7F);
+                    logical[X][Y].setTo(ch);
+                }
+            } else {
+                logical[X][Y].setTo(ch);
             }
-            logical[X][Y].setTo(ch);
 
             // If this happens to be the cursor position, make the position
             // dirty.
@@ -680,11 +689,18 @@ public class LogicalScreen implements Screen {
         if ((X >= 0) && (X < width) && (Y >= 0) && (Y < height)) {
 
             // Do not put control characters on the display
-            assert (ch >= 0x20);
-            assert (ch != 0x7F);
+            if (ch < 0x20) {
+                if (ch == '\t') {
+                    // Treat tab as a space
+                    logical[X][Y].setTo(attr);
+                    logical[X][Y].setChar(' ');
+                }
+            } else {
+                assert (ch != 0x7F);
 
-            logical[X][Y].setTo(attr);
-            logical[X][Y].setChar(ch);
+                logical[X][Y].setTo(attr);
+                logical[X][Y].setChar(ch);
+            }
 
             // If this happens to be the cursor position, make the position
             // dirty.
@@ -725,7 +741,14 @@ public class LogicalScreen implements Screen {
         // System.err.printf("putCharXY: %d, %d, %c\n", X, Y, ch);
 
         if ((X >= 0) && (X < width) && (Y >= 0) && (Y < height)) {
-            logical[X][Y].setChar(ch);
+            if (ch < 0x20) {
+                if (ch == '\t') {
+                    // Treat tab as a space
+                    logical[X][Y].setChar(' ');
+                }
+            } else {
+                logical[X][Y].setChar(ch);
+            }
 
             // If this happens to be the cursor position, make the position
             // dirty.

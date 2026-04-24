@@ -18,12 +18,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.GraphicsConfiguration;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.Insets;
-import java.awt.Transparency;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -48,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 import javax.swing.JFrame;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
@@ -207,7 +207,7 @@ public class SwingTerminal extends LogicalScreen
      * Temporary buffer for drawing a single glyph.
      */
     private BufferedImage glyphBuffer = null;
-    
+
     /**
      * RGBA buffer for the entire screen to blit pixels directly.
      */
@@ -240,6 +240,11 @@ public class SwingTerminal extends LogicalScreen
      * blinking-and-visible, text.
      */
     private Map<ComplexCell, int[]> glyphCache;
+
+    /**
+     * A cache of pixels for Image cells.
+     */
+    private Map<BufferedImage, int[]> imagePixelCache = new HashMap<BufferedImage, int[]>();
 
     /**
      * If true, we were successful at getting the font dimensions.
@@ -348,7 +353,7 @@ public class SwingTerminal extends LogicalScreen
      * The number of millis to wait before switching the blink from visible
      * to invisible.  Set to 0 or negative to disable blinking.
      */
-    private long blinkMillis = 500;
+    private long blinkMillis = 250;
 
     /**
      * The time that the blink last flipped from visible to invisible or
@@ -448,7 +453,8 @@ public class SwingTerminal extends LogicalScreen
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
 
-                    JFrame frame = new JFrame() {
+                    JFrame frame = new JFrame();
+                    JPanel panel = new JPanel() {
 
                         /**
                          * Serializable version.
@@ -493,6 +499,8 @@ public class SwingTerminal extends LogicalScreen
                             }
                         }
                     };
+                    frame.setLayout(new BorderLayout());
+                    frame.add(panel, BorderLayout.CENTER);
 
                     // Set icon
                     ClassLoader loader = Thread.currentThread().
@@ -501,7 +509,7 @@ public class SwingTerminal extends LogicalScreen
                                 getResource(ICONFILE))).getImage());
 
                     // Get the Swing component
-                    SwingTerminal.this.swing = new SwingComponent(frame);
+                    SwingTerminal.this.swing = new SwingComponent(frame, panel);
 
                     // Hang onto top and left for drawing.
                     Insets insets = SwingTerminal.this.swing.getInsets();
@@ -510,6 +518,15 @@ public class SwingTerminal extends LogicalScreen
 
                     // Load the font so that we can set sessionInfo.
                     setDefaultFont();
+
+                    // Add listeners to Swing.
+                    SwingTerminal.this.swing.addKeyListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addWindowListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addComponentListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addFocusListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addMouseListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addMouseMotionListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addMouseWheelListener(SwingTerminal.this);
 
                     // Get the default cols x rows and set component size
                     // accordingly.
@@ -540,18 +557,6 @@ public class SwingTerminal extends LogicalScreen
         mouse3           = false;
         eventQueue       = new ArrayList<TInputEvent>();
 
-        // Add listeners to Swing.
-        if (swing == null) {
-            // Swing isn't running.  Quite a few things might break...
-            return;
-        }
-        swing.addKeyListener(this);
-        swing.addWindowListener(this);
-        swing.addComponentListener(this);
-        swing.addFocusListener(this);
-        swing.addMouseListener(this);
-        swing.addMouseMotionListener(this);
-        swing.addMouseWheelListener(this);
     }
 
     /**
@@ -629,10 +634,10 @@ public class SwingTerminal extends LogicalScreen
                     component.add(newComponent);
 
                     // Allow key events to be received
-                    component.setFocusable(true);
+                    newComponent.setFocusable(true);
 
                     // Get the Swing component
-                    SwingTerminal.this.swing = new SwingComponent(component);
+                    SwingTerminal.this.swing = new SwingComponent(newComponent);
 
                     // Hang onto top and left for drawing.
                     Insets insets = SwingTerminal.this.swing.getInsets();
@@ -641,6 +646,15 @@ public class SwingTerminal extends LogicalScreen
 
                     // Load the font so that we can set sessionInfo.
                     setDefaultFont();
+
+                    // Add listeners to Swing.
+                    SwingTerminal.this.swing.addKeyListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addWindowListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addComponentListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addFocusListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addMouseListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addMouseMotionListener(SwingTerminal.this);
+                    SwingTerminal.this.swing.addMouseWheelListener(SwingTerminal.this);
 
                     // Get the default cols x rows and set component size
                     // accordingly.
@@ -664,18 +678,6 @@ public class SwingTerminal extends LogicalScreen
         mouse3           = false;
         eventQueue       = new ArrayList<TInputEvent>();
 
-        // Add listeners to Swing.
-        if (swing == null) {
-            // Swing isn't running.  Quite a few things might break...
-            return;
-        }
-        swing.addKeyListener(this);
-        swing.addWindowListener(this);
-        swing.addComponentListener(this);
-        swing.addFocusListener(this);
-        swing.addMouseListener(this);
-        swing.addMouseMotionListener(this);
-        swing.addMouseWheelListener(this);
     }
 
     // ------------------------------------------------------------------------
@@ -732,6 +734,10 @@ public class SwingTerminal extends LogicalScreen
             // Non-triple-buffered, call drawToSwing() once
             drawToSwing();
         }
+
+        // Reset the dirty status
+        resetDirty();
+        reallyCleared = false;
 
         // System.err.println("SwingTerminal.flushPhysical() end");
     }
@@ -821,7 +827,7 @@ public class SwingTerminal extends LogicalScreen
     /**
      * Reload options from System properties.
      */
-    public void reloadOptions() {
+    public final void reloadOptions() {
         // Figure out my cursor style.
         setCursorStyle(System.getProperty("com.idataconnect.salinas.toolkit.Swing.cursorStyle",
                 "underline"));
@@ -882,8 +888,6 @@ public class SwingTerminal extends LogicalScreen
         if (millis <= 0) {
             cursorBlinkOption = BlinkOption.OFF;
             textBlinkOption = BlinkOption.OFF;
-        } else {
-            blinkMillis = millis;
         }
 
         int dimPercent = 80;
@@ -1189,6 +1193,7 @@ public class SwingTerminal extends LogicalScreen
                             swing.setFont(font);
                             glyphCacheBlink = new HashMap<ComplexCell, int[]>();
                             glyphCache = new HashMap<ComplexCell, int[]>();
+                            imagePixelCache = new HashMap<BufferedImage, int[]>();
                             resizeToScreen(true);
                         }
                     }
@@ -1205,6 +1210,7 @@ public class SwingTerminal extends LogicalScreen
                 swing.setFont(font);
                 glyphCacheBlink = new HashMap<ComplexCell, int[]>();
                 glyphCache = new HashMap<ComplexCell, int[]>();
+                imagePixelCache = new HashMap<BufferedImage, int[]>();
                 resizeToScreen(true);
             }
         }
@@ -1223,7 +1229,7 @@ public class SwingTerminal extends LogicalScreen
      * Set the font to Terminus, the best all-around font for both CP437 and
      * ISO8859-1.
      */
-    public void setDefaultFont() {
+    public final void setDefaultFont() {
         try {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             InputStream in = loader.getResourceAsStream(FONTFILE);
@@ -1260,6 +1266,7 @@ public class SwingTerminal extends LogicalScreen
             this.textAdjustX = textAdjustX;
             glyphCacheBlink = new HashMap<ComplexCell, int[]>();
             glyphCache = new HashMap<ComplexCell, int[]>();
+            imagePixelCache = new HashMap<BufferedImage, int[]>();
             clearPhysical();
         }
     }
@@ -1283,6 +1290,7 @@ public class SwingTerminal extends LogicalScreen
             this.textAdjustY = textAdjustY;
             glyphCacheBlink = new HashMap<ComplexCell, int[]>();
             glyphCache = new HashMap<ComplexCell, int[]>();
+            imagePixelCache = new HashMap<BufferedImage, int[]>();
             clearPhysical();
         }
     }
@@ -1307,6 +1315,7 @@ public class SwingTerminal extends LogicalScreen
             textHeight = fontTextHeight + textAdjustHeight;
             glyphCacheBlink = new HashMap<ComplexCell, int[]>();
             glyphCache = new HashMap<ComplexCell, int[]>();
+            imagePixelCache = new HashMap<BufferedImage, int[]>();
             clearPhysical();
         }
     }
@@ -1331,6 +1340,7 @@ public class SwingTerminal extends LogicalScreen
             textWidth = fontTextWidth + textAdjustWidth;
             glyphCacheBlink = new HashMap<ComplexCell, int[]>();
             glyphCache = new HashMap<ComplexCell, int[]>();
+            imagePixelCache = new HashMap<BufferedImage, int[]>();
             clearPhysical();
         }
     }
@@ -1600,12 +1610,28 @@ public class SwingTerminal extends LogicalScreen
         BufferedImage image = cell.getImage();
         assert (image != null);
 
-        if (swing.getFrame() != null) {
-            gr.drawImage(image, xPixel, yPixel, textWidth,
-                textHeight, swing.getFrame());
-        } else {
-            gr.drawImage(image, xPixel, yPixel, textWidth,
-                textHeight, swing.getComponent());
+        if (gr != null) {
+            if (swing.getFrame() != null) {
+                gr.drawImage(image, xPixel, yPixel, textWidth,
+                    textHeight, swing.getFrame());
+            } else {
+                gr.drawImage(image, xPixel, yPixel, textWidth,
+                    textHeight, swing.getComponent());
+            }
+        }
+
+        // Update backBufferData
+        if (backBufferData != null) {
+            int[] pixels;
+            synchronized (imagePixelCache) {
+                pixels = imagePixelCache.get(image);
+                if (pixels == null) {
+                    pixels = new int[textWidth * textHeight];
+                    image.getRGB(0, 0, textWidth, textHeight, pixels, 0, textWidth);
+                    imagePixelCache.put(image, pixels);
+                }
+            }
+            blitToScreen(xPixel, yPixel, pixels, textWidth);
         }
     }
 
@@ -1685,9 +1711,14 @@ public class SwingTerminal extends LogicalScreen
                 pixels = glyphCache.get(cell);
             }
         }
-        
+
         if (pixels != null) {
             blitToScreen(xPixel, yPixel, pixels, pixels.length / textHeight);
+            if (gr != null) {
+                tempBuffer.setRGB(0, 0, pixels.length / textHeight, textHeight,
+                    pixels, 0, pixels.length / textHeight);
+                gr.drawImage(tempBuffer, xPixel, yPixel, null);
+            }
             return;
         }
 
@@ -1706,6 +1737,9 @@ public class SwingTerminal extends LogicalScreen
             newImage.getRGB(0, 0, emjWidth, textHeight, newPixels, 0, emjWidth);
 
             blitToScreen(xPixel, yPixel, newPixels, emjWidth);
+            if (gr != null) {
+                gr.drawImage(newImage, xPixel, yPixel, null);
+            }
 
             if (cell.isCacheable()) {
                 cacheCellPixels(cell, newPixels);
@@ -1748,6 +1782,9 @@ public class SwingTerminal extends LogicalScreen
             newImage.getRGB(0, 0, gw, textHeight, newPixels, 0, gw);
 
             blitToScreen(xPixel, yPixel, newPixels, gw);
+            if (gr != null) {
+                gr.drawImage(newImage, xPixel, yPixel, null);
+            }
 
             if (cell.isCacheable()) {
                 cacheCellPixels(cell, newPixels);
@@ -1812,6 +1849,9 @@ public class SwingTerminal extends LogicalScreen
             }
 
             blitToScreen(xPixel, yPixel, tempPixels, textWidth);
+            if (gr != null) {
+                gr.drawImage(tempBuffer, xPixel, yPixel, null);
+            }
         }
 
     }
@@ -2008,7 +2048,7 @@ public class SwingTerminal extends LogicalScreen
             glyphBuffer = new BufferedImage(textWidth, textHeight,
                 BufferedImage.TYPE_INT_ARGB);
         }
-        
+
         int bWidth = swing.getWidth();
         int bHeight = swing.getHeight();
         if (bWidth <= 0 || bHeight <= 0) {
@@ -2024,12 +2064,6 @@ public class SwingTerminal extends LogicalScreen
         // Prevent updates to the screen's data from the TApplication
         // threads.
         synchronized (this) {
-
-            /*
-            System.err.printf("bounds %s X %d %d Y %d %d\n",
-                 bounds, xCellMin, xCellMax, yCellMin, yCellMax);
-             */
-
             for (int y = yCellMin; y < Math.min(height, yCellMax); y++) {
                 if (!dirtyRows[y] && !reallyCleared) {
                     // Check for blinking/pulsing cells that might need redraw
@@ -2063,13 +2097,13 @@ public class SwingTerminal extends LogicalScreen
                             if (imagesOverText) {
                                 if (lCell.isTransparentImage()) {
                                     // Draw the glyph underneath the image.
-                                    drawGlyph(glyphBuffer, gr, lCell,
+                                    drawGlyph(glyphBuffer, null, lCell,
                                         xPixel, yPixel);
                                 }
                             }
-                            drawImage(gr, lCell, xPixel, yPixel);
+                            drawImage(null, lCell, xPixel, yPixel);
                         } else {
-                            drawGlyph(glyphBuffer, gr, lCell, xPixel, yPixel);
+                            drawGlyph(glyphBuffer, null, lCell, xPixel, yPixel);
                         }
 
                         // Physical is always updated
@@ -2078,11 +2112,20 @@ public class SwingTerminal extends LogicalScreen
                 }
                 dirtyRows[y] = false;
             }
-            drawCursor(gr);
 
+            // Perform a single blit from the backBuffer to the screen
             if (backBuffer != null) {
-                gr.drawImage(backBuffer, 0, 0, null);
+                Shape clip = gr.getClip();
+                if (clip != null) {
+                    Rectangle r = clip.getBounds();
+                    gr.drawImage(backBuffer, r.x, r.y, r.x + r.width, r.y + r.height,
+                                 r.x, r.y, r.x + r.width, r.y + r.height, null);
+                } else {
+                    gr.drawImage(backBuffer, 0, 0, null);
+                }
             }
+
+            drawCursor(gr);
 
             reallyCleared = false;
         } // synchronized (this)
@@ -2822,7 +2865,6 @@ public class SwingTerminal extends LogicalScreen
 
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
-            resetBlinkTimer();
         }
         if (listener != null) {
             synchronized (listener) {
@@ -2870,7 +2912,6 @@ public class SwingTerminal extends LogicalScreen
 
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
-            resetBlinkTimer();
         }
         if (listener != null) {
             synchronized (listener) {
@@ -2958,7 +2999,6 @@ public class SwingTerminal extends LogicalScreen
 
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
-            resetBlinkTimer();
         }
         if (listener != null) {
             synchronized (listener) {
@@ -3024,7 +3064,6 @@ public class SwingTerminal extends LogicalScreen
 
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
-            resetBlinkTimer();
         }
         if (listener != null) {
             synchronized (listener) {
@@ -3093,7 +3132,6 @@ public class SwingTerminal extends LogicalScreen
 
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
-            resetBlinkTimer();
         }
         if (listener != null) {
             synchronized (listener) {

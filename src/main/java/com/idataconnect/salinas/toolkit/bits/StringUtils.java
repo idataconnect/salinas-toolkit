@@ -429,6 +429,9 @@ public class StringUtils {
         if (ch == 0) {
             return 0;
         }
+        if (ch == '\t') {
+            return 1;
+        }
         if ((ch < 32) || ((ch >= 0x7f) && (ch < 0xa0))) {
             return 0;
         }

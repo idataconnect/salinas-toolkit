@@ -15,7 +15,6 @@
 package demo;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.File;
@@ -23,9 +22,6 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.awt.Font;
-import java.awt.FontFormatException;
-import java.io.InputStream;
-import javax.imageio.ImageIO;
 
 import com.idataconnect.salinas.toolkit.TAction;
 import com.idataconnect.salinas.toolkit.TApplication;
@@ -114,20 +110,8 @@ public class DemoPixelsWindow extends TWindow {
                         // Turn it off.
                         getApplication().setCustomMousePointer(null);
                     } else {
-                        // Turn it on.
-                        try {
-                            ClassLoader loader;
-                            loader = Thread.currentThread().getContextClassLoader();
-                            BufferedImage image;
-                            image = ImageIO.read(loader.
-                                getResource("demo/cute_icon.png"));
-                            TApplication app = getApplication();
-                            app.setCustomMousePointer(new MousePointer(0, 0, 0,
-                                    image, image.getWidth() / 2,
-                                    image.getHeight() / 2));
-                        } catch (Exception e) {
-                            new com.idataconnect.salinas.toolkit.TExceptionDialog(getApplication(), e);
-                        }
+                        // Demo icon removed due to licensing.
+                        messageBox(i18n.getString("windowTitle"), "Demo icon removed for licensing compliance.");
                     }
                 }
             }
@@ -140,20 +124,9 @@ public class DemoPixelsWindow extends TWindow {
                 public void DO() {
                     if (floatingText == null) {
                         int fontSize = 31;
-                        Font fontRoot = null;
-                        Font font = null;
-                        try {
-                            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-                            InputStream in = loader.getResourceAsStream("demo/5thgradecursive.ttf");
-                            fontRoot = Font.createFont(Font.TRUETYPE_FONT, in);
-                            font = fontRoot.deriveFont(Font.PLAIN, fontSize);
-                        } catch (FontFormatException e) {
-                            font = new Font(Font.SANS_SERIF, Font.PLAIN,
-                                fontSize);
-                        } catch (IOException e) {
-                            font = new Font(Font.SANS_SERIF, Font.PLAIN,
-                                fontSize);
-                        }
+                        // Use system font instead of deleted 5th Grade Cursive
+                        Font font = new Font(Font.SANS_SERIF, Font.ITALIC, fontSize);
+
                         floatingText = new Text(30, 21, 2,
                             i18n.getString("heatFromFire"), font, fontSize,
                             new java.awt.Color(0xF7, 0xA8, 0xB8));
@@ -169,33 +142,13 @@ public class DemoPixelsWindow extends TWindow {
 
         addLabel(i18n.getString("textField1"), 1, row);
         TWidget field = addField(col, row, 15, false, "Field text");
-        try {
-            ClassLoader loader;
-            loader = Thread.currentThread().getContextClassLoader();
-            BufferedImage image;
-            image = ImageIO.read(loader.
-                getResource("demo/ibeam.png"));
-            TApplication app = getApplication();
-            field.setCustomMousePointer(new MousePointer(0, 0, 0,
-                    image, 24, 24));
-        } catch (Exception e) {
-            new com.idataconnect.salinas.toolkit.TExceptionDialog(getApplication(), e);
-        }
         row += 2;
 
         // TODO: more things
 
         // Put some floating things on the screen.
         try {
-            ClassLoader loader;
-            loader = Thread.currentThread().getContextClassLoader();
-            BufferedImage image;
-            image = ImageIO.read(loader.getResource("demo/trans_icon.png"));
-            Animation animation;
-            animation = ImageUtils.getAnimation(loader.getResource(
-                "demo/butterfly.gif"));
-            addUnderlay(new Bitmap(17, 33, 0, animation, getApplication()));
-            addOverlay(new Bitmap(15, 60, 0, image));
+            // Demo animations and icons removed for licensing compliance.
 
             timer3 = getApplication().addTimer(100, true,
                 new TAction() {

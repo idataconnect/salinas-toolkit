@@ -1749,6 +1749,74 @@ public class TKeypress {
     }
 
     /**
+     * Parse a string like "Alt-1", "Ctrl+N", "F3", etc. into a TKeypress.
+     *
+     * @param keyText the string to parse
+     * @return the TKeypress, or null if it cannot be parsed
+     */
+    public static TKeypress parse(final String keyText) {
+        if (keyText == null || keyText.isEmpty()) {
+            return null;
+        }
+
+        String label = keyText.trim();
+        boolean alt = false;
+        boolean ctrl = false;
+        boolean shift = false;
+
+        String [] parts = label.split("[-+]");
+        for (int i = 0; i < parts.length - 1; i++) {
+            String p = parts[i].toLowerCase();
+            if (p.equals("alt")) { alt = true; }
+            else if (p.equals("ctrl")) { ctrl = true; }
+            else if (p.equals("shift")) { shift = true; }
+        }
+
+        String last = parts[parts.length - 1];
+
+        // Handle F-keys
+        if (last.toUpperCase().startsWith("F") && last.length() > 1) {
+            try {
+                int fNum = Integer.parseInt(last.substring(1));
+                if (fNum >= 1 && fNum <= 12) {
+                    return new TKeypress(true, fNum, ' ', alt, ctrl, shift);
+                }
+            } catch (NumberFormatException e) {
+                // SQUASH
+            }
+        }
+
+        // Handle common names
+        String l = last.toLowerCase();
+        if (l.equals("enter")) { return new TKeypress(true, ENTER, ' ', alt, ctrl, shift); }
+        if (l.equals("esc") || l.equals("escape")) { return new TKeypress(true, ESC, ' ', alt, ctrl, shift); }
+        if (l.equals("tab")) { return new TKeypress(true, TAB, ' ', alt, ctrl, shift); }
+        if (l.equals("ins") || l.equals("insert")) { return new TKeypress(true, INS, ' ', alt, ctrl, shift); }
+        if (l.equals("del") || l.equals("delete")) { return new TKeypress(true, DEL, ' ', alt, ctrl, shift); }
+        if (l.equals("home")) { return new TKeypress(true, HOME, ' ', alt, ctrl, shift); }
+        if (l.equals("end")) { return new TKeypress(true, END, ' ', alt, ctrl, shift); }
+        if (l.equals("pgup") || l.equals("pageup")) { return new TKeypress(true, PGUP, ' ', alt, ctrl, shift); }
+        if (l.equals("pgdn") || l.equals("pagedown")) { return new TKeypress(true, PGDN, ' ', alt, ctrl, shift); }
+        if (l.equals("up")) { return new TKeypress(true, UP, ' ', alt, ctrl, shift); }
+        if (l.equals("down")) { return new TKeypress(true, DOWN, ' ', alt, ctrl, shift); }
+        if (l.equals("left")) { return new TKeypress(true, LEFT, ' ', alt, ctrl, shift); }
+        if (l.equals("right")) { return new TKeypress(true, RIGHT, ' ', alt, ctrl, shift); }
+        if (l.equals("space")) { return new TKeypress(false, 0, ' ', alt, ctrl, shift); }
+        if (l.equals("backspace")) { return new TKeypress(true, BACKSPACE, ' ', alt, ctrl, shift); }
+
+        // Handle single character
+        if (last.length() == 1) {
+            char ch = last.charAt(0);
+            if (ctrl && !alt && !shift) {
+                return new TKeypress(false, 0, Character.toUpperCase(ch), alt, ctrl, shift);
+            }
+            return new TKeypress(false, 0, Character.toLowerCase(ch), alt, ctrl, shift);
+        }
+
+        return null;
+    }
+
+    /**
      * Convert a keypress to lowercase.  Function keys and alt/ctrl keys are
      * not converted.
      *

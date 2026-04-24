@@ -100,6 +100,21 @@ public class SwingComponent {
         setupComponent();
     }
 
+    /**
+     * Construct using both a JFrame and a JComponent.
+     *
+     * @param frame the JFrame to draw to
+     * @param component the JComponent to draw to
+     */
+    @SuppressWarnings("this-escape")
+    public SwingComponent(final JFrame frame, final JComponent component) {
+        this.frame = frame;
+        this.component = component;
+        adjustInsets = new Insets(BORDER, BORDER, BORDER, BORDER);
+        setupFrame();
+        setupComponent();
+    }
+
     // ------------------------------------------------------------------------
     // SwingComponent ---------------------------------------------------------
     // ------------------------------------------------------------------------
@@ -141,7 +156,7 @@ public class SwingComponent {
     /**
      * Setup to render to an existing JComponent.
      */
-    public void setupComponent() {
+    public final void setupComponent() {
         component.setBackground(Color.black);
 
         if (System.getProperty("com.idataconnect.salinas.toolkit.Swing.mouseImage") != null) {
@@ -173,7 +188,7 @@ public class SwingComponent {
     /**
      * Setup to render to an existing JFrame.
      */
-    public void setupFrame() {
+    public final void setupFrame() {
         frame.setTitle("Console Application");
         frame.setBackground(Color.black);
         frame.pack();
@@ -306,10 +321,10 @@ public class SwingComponent {
      * @param g the graphics context to use for painting
      */
     public void paint(Graphics g) {
-        if (frame != null) {
-            frame.paint(g);
-        } else {
+        if (component != null) {
             component.paint(g);
+        } else {
+            frame.paint(g);
         }
     }
 
@@ -317,10 +332,10 @@ public class SwingComponent {
      * Repaints this component.
      */
     public void repaint() {
-        if (frame != null) {
-            frame.repaint();
-        } else {
+        if (component != null) {
             component.repaint();
+        } else {
+            frame.repaint();
         }
     }
 
@@ -333,10 +348,10 @@ public class SwingComponent {
      * @param height the height
      */
     public void repaint(int x, int y, int width, int height) {
-        if (frame != null) {
-            frame.repaint(x, y, width, height);
-        } else {
+        if (component != null) {
             component.repaint(x, y, width, height);
+        } else {
+            frame.repaint(x, y, width, height);
         }
     }
 
@@ -348,10 +363,10 @@ public class SwingComponent {
      */
     public Insets getInsets() {
         Insets swingInsets = null;
-        if (frame != null) {
-            swingInsets = frame.getInsets();
-        } else {
+        if (component != null) {
             swingInsets = component.getInsets();
+        } else {
+            swingInsets = frame.getInsets();
         }
         Insets result = new Insets(swingInsets.top + adjustInsets.top,
             swingInsets.left + adjustInsets.left,
@@ -366,11 +381,10 @@ public class SwingComponent {
      * @return the current width of this component
      */
     public int getWidth() {
-        if (frame != null) {
-            return frame.getWidth();
-        } else {
+        if (component != null) {
             return component.getWidth();
         }
+        return frame.getWidth();
     }
 
     /**
@@ -379,11 +393,10 @@ public class SwingComponent {
      * @return the current height of this component
      */
     public int getHeight() {
-        if (frame != null) {
-            return frame.getHeight();
-        } else {
+        if (component != null) {
             return component.getHeight();
         }
+        return frame.getHeight();
     }
 
     /**
@@ -393,11 +406,10 @@ public class SwingComponent {
      * component, the font of its parent is returned
      */
     public Font getFont() {
-        if (frame != null) {
-            return frame.getFont();
-        } else {
+        if (component != null) {
             return component.getFont();
         }
+        return frame.getFont();
     }
 
     /**
@@ -407,10 +419,10 @@ public class SwingComponent {
      * is null then this component will inherit the font of its parent
      */
     public void setFont(final Font f) {
-        if (frame != null) {
-            frame.setFont(f);
-        } else {
+        if (component != null) {
             component.setFont(f);
+        } else {
+            frame.setFont(f);
         }
     }
 
@@ -434,11 +446,10 @@ public class SwingComponent {
      * @return a graphics context for this component, or null if it has none
      */
     public Graphics getGraphics() {
-        if (frame != null) {
-            return frame.getGraphics();
-        } else {
+        if (component != null) {
             return component.getGraphics();
         }
+        return frame.getGraphics();
     }
 
     /**
@@ -461,39 +472,44 @@ public class SwingComponent {
      * @param width the new width in pixels
      * @param height the new height in pixels
      */
-    public void setDimensions(final int width, final int height) {
+    public final void setDimensions(final int width, final int height) {
         if (SwingUtilities.isEventDispatchThread()) {
-            // We are in the Swing thread and can safely set the size.
-
-            // Figure out the thickness of borders and use that to set the
-            // final size.
-            if (frame != null) {
-                Insets insets = getInsets();
-                frame.setSize(width + insets.left + insets.right,
-                    height + insets.top + insets.bottom);
-            } else {
-                Insets insets = getInsets();
-                component.setSize(width + insets.left + insets.right,
-                    height + insets.top + insets.bottom);
-            }
-            return;
-        }
-
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                // Figure out the thickness of borders and use that to set
-                // the final size.
-                if (frame != null) {
-                    Insets insets = getInsets();
-                    frame.setSize(width + insets.left + insets.right,
-                        height + insets.top + insets.bottom);
-                } else {
-                    Insets insets = getInsets();
-                    component.setSize(width + insets.left + insets.right,
-                        height + insets.top + insets.bottom);
+            setDimensionsImpl(width, height);
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    setDimensionsImpl(width, height);
                 }
+            });
+        }
+    }
+
+    /**
+     * Resize the component to match the font dimensions.
+     *
+     * @param width the new width in pixels
+     * @param height the new height in pixels
+     */
+    private void setDimensionsImpl(final int width, final int height) {
+        // Figure out the thickness of borders and use that to set the
+        // final size.
+        if (component != null) {
+            component.setPreferredSize(new java.awt.Dimension(
+                width + adjustInsets.left + adjustInsets.right,
+                height + adjustInsets.top + adjustInsets.bottom));
+            if (frame != null) {
+                frame.pack();
+            } else {
+                component.setSize(width + adjustInsets.left + adjustInsets.right,
+                    height + adjustInsets.top + adjustInsets.bottom);
             }
-        });
+        } else if (frame != null) {
+            Insets insets = frame.getInsets();
+            frame.setSize(width + insets.left + insets.right +
+                adjustInsets.left + adjustInsets.right,
+                height + insets.top + insets.bottom +
+                adjustInsets.top + adjustInsets.bottom);
+        }
     }
 
     /**
@@ -504,10 +520,10 @@ public class SwingComponent {
      * @param l the component listener
      */
     public void addComponentListener(ComponentListener l) {
-        if (frame != null) {
-            frame.addComponentListener(l);
-        } else {
+        if (component != null) {
             component.addComponentListener(l);
+        } else {
+            frame.addComponentListener(l);
         }
     }
 
@@ -519,10 +535,10 @@ public class SwingComponent {
      * @param l the focus listener
      */
     public void addFocusListener(FocusListener l) {
-        if (frame != null) {
-            frame.addFocusListener(l);
-        } else {
+        if (component != null) {
             component.addFocusListener(l);
+        } else {
+            frame.addFocusListener(l);
         }
     }
 
@@ -534,10 +550,10 @@ public class SwingComponent {
      * @param l the key listener.
      */
     public void addKeyListener(KeyListener l) {
-        if (frame != null) {
-            frame.addKeyListener(l);
-        } else {
+        if (component != null) {
             component.addKeyListener(l);
+        } else {
+            frame.addKeyListener(l);
         }
     }
 
@@ -549,10 +565,10 @@ public class SwingComponent {
      * @param l the mouse listener
      */
     public void addMouseListener(MouseListener l) {
-        if (frame != null) {
-            frame.addMouseListener(l);
-        } else {
+        if (component != null) {
             component.addMouseListener(l);
+        } else {
+            frame.addMouseListener(l);
         }
     }
 
@@ -564,10 +580,10 @@ public class SwingComponent {
      * @param l the mouse motion listener
      */
     public void addMouseMotionListener(MouseMotionListener l) {
-        if (frame != null) {
-            frame.addMouseMotionListener(l);
-        } else {
+        if (component != null) {
             component.addMouseMotionListener(l);
+        } else {
+            frame.addMouseMotionListener(l);
         }
     }
 
@@ -579,10 +595,10 @@ public class SwingComponent {
      * @param l the mouse wheel listener
      */
     public void addMouseWheelListener(MouseWheelListener l) {
-        if (frame != null) {
-            frame.addMouseWheelListener(l);
-        } else {
+        if (component != null) {
             component.addMouseWheelListener(l);
+        } else {
+            frame.addMouseWheelListener(l);
         }
     }
 
@@ -604,10 +620,10 @@ public class SwingComponent {
      * top-level ancestor is already the focused Window.
      */
     public void requestFocusInWindow() {
-        if (frame != null) {
-            frame.requestFocusInWindow();
-        } else {
+        if (component != null) {
             component.requestFocusInWindow();
+        } else {
+            frame.requestFocusInWindow();
         }
     }
 

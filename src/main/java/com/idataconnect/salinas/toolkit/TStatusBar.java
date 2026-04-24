@@ -249,7 +249,7 @@ public class TStatusBar extends TWidget {
         // TApplication after everything is drawn, and after
         // Screen.resetClipping().  So at this point we are drawing in
         // absolute coordinates, not relative to our TWindow.
-        int row = getScreen().getHeight() - 1;
+        int row = getY();
         int width = getScreen().getWidth();
 
         hLineXY(0, row, width, ' ', barColor);

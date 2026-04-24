@@ -2928,7 +2928,7 @@ public class TApplication implements Runnable {
         int x = 0;
         int h = getScreen().getHeight();
         int y = h - 2; // Row 1 of dock
-        
+
         for (TWindow w : windows) {
             if (w.isMinimized() && w != window) {
                 x += 16;
@@ -3056,10 +3056,8 @@ public class TApplication implements Runnable {
         if (hideStatusBar == false) {
             // Determine status bar of the top-level window
             TStatusBar statusBar = null;
-            if (topLevel != null) {
-                if (topLevel.isShown()) {
-                    statusBar = topLevel.getStatusBar();
-                }
+            if (topLevel != null && topLevel.isShown() && (topLevel.getStatusBar() != null)) {
+                statusBar = topLevel.getStatusBar();
             } else {
                 if (desktop != null) {
                     statusBar = desktop.getStatusBar();
@@ -3078,14 +3076,14 @@ public class TApplication implements Runnable {
                 barColor.setTo(getTheme().getColor("tstatusbar.text"));
                 getScreen().hLineXY(0, h - 3, getScreen().getWidth(), ' ', barColor);
             }
-            
+
             // Draw a separator tray for icons BELOW the status bar (H-2, H-1)
             CellAttributes dockColor = new CellAttributes();
             dockColor.setTo(theme.getColor("twindow.background"));
             getScreen().hLineXY(0, h - 2, getScreen().getWidth(), ' ', dockColor);
             getScreen().hLineXY(0, h - 1, getScreen().getWidth(), ' ', dockColor);
         }
- 
+
         // --- LAYER 2: Regular Windows (normal windows only) ---
         for (TWindow window: sorted) {
             if (window.isShown() && !window.isMinimized()) {

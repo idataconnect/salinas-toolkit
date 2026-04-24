@@ -30,7 +30,7 @@ public class SwingSessionInfo implements SessionInfo {
     /**
      * The Swing JFrame or JComponent.
      */
-    private SwingComponent swing;
+    private final SwingComponent swing;
 
     /**
      * The width of a text cell in pixels.
@@ -65,7 +65,7 @@ public class SwingSessionInfo implements SessionInfo {
     /**
      * The time this session was started.
      */
-    private long startTime = System.currentTimeMillis();
+    private final long startTime = System.currentTimeMillis();
 
     /**
      * The number of seconds since the last user input event from this
@@ -120,6 +120,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @return the number of millis since midnight, January 1, 1970 UTC
      */
+    @Override
     public long getStartTime() {
         return startTime;
     }
@@ -130,6 +131,7 @@ public class SwingSessionInfo implements SessionInfo {
      * @return the number of seconds since the last user input event from
      * this session
      */
+    @Override
     public int getIdleTime() {
         return idleTime;
     }
@@ -140,6 +142,7 @@ public class SwingSessionInfo implements SessionInfo {
      * @param seconds the number of seconds since the last user input event
      * from this session
      */
+    @Override
     public void setIdleTime(final int seconds) {
         idleTime = seconds;
     }
@@ -149,6 +152,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @return the username
      */
+    @Override
     public String getUsername() {
         return this.username;
     }
@@ -158,6 +162,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @param username the value
      */
+    @Override
     public void setUsername(final String username) {
         this.username = username;
     }
@@ -167,6 +172,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @return the language
      */
+    @Override
     public String getLanguage() {
         return this.language;
     }
@@ -176,6 +182,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @param language the value
      */
+    @Override
     public void setLanguage(final String language) {
         this.language = language;
     }
@@ -185,6 +192,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @return the window width
      */
+    @Override
     public int getWindowWidth() {
         return windowWidth;
     }
@@ -194,6 +202,7 @@ public class SwingSessionInfo implements SessionInfo {
      *
      * @return the window height
      */
+    @Override
     public int getWindowHeight() {
         return windowHeight;
     }
@@ -201,18 +210,12 @@ public class SwingSessionInfo implements SessionInfo {
     /**
      * Re-query the text window size.
      */
+    @Override
     public void queryWindowSize() {
         Insets insets = swing.getInsets();
         int width = swing.getWidth() - insets.left - insets.right;
         int height = swing.getHeight() - insets.top - insets.bottom;
-        // In theory, if Java reported pixel-perfect dimensions, the
-        // expressions above would precisely line up with the requested
-        // window size from SwingComponent.setDimensions().  In practice,
-        // there appears to be a small difference.  Add half a text cell in
-        // both directions before the division to hopefully reach the same
-        // result as setDimensions() was supposed to give us.
-        width += (textWidth / 2);
-        height += (textHeight / 2);
+
         windowWidth = width / textWidth;
         windowHeight = height / textHeight;
 

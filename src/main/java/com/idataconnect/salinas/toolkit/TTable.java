@@ -685,7 +685,8 @@ public class TTable extends TWidget {
         }
 
         // If editing, pass to that cell and do nothing else.
-        if (getSelectedCell().isEditing) {
+        Cell selectedCell = getSelectedCell();
+        if (selectedCell != null && selectedCell.isEditing) {
             super.onKeypress(keypress);
             return;
         }
@@ -790,10 +791,12 @@ public class TTable extends TWidget {
         // Column labels.
         if (showColumnLabels == true) {
             for (int i = left; i < columns.size(); i++) {
-                if (columns.get(i).get(top).isVisible() == false) {
-                    break;
+                if (!rows.isEmpty() && top < rows.size()) {
+                    if (columns.get(i).get(top).isVisible() == false) {
+                        break;
+                    }
                 }
-                putStringXY(columns.get(i).get(top).getX(), 0,
+                putStringXY(columns.get(i).getX(), 0,
                     String.format(" %-" +
                         (columns.get(i).width - 2)
                         + "s ", columns.get(i).label),
@@ -804,10 +807,12 @@ public class TTable extends TWidget {
         // Row labels.
         if (showRowLabels == true) {
             for (int i = top; i < rows.size(); i++) {
-                if (rows.get(i).get(left).isVisible() == false) {
-                    break;
+                if (!columns.isEmpty() && left < columns.size()) {
+                    if (rows.get(i).get(left).isVisible() == false) {
+                        break;
+                    }
                 }
-                putStringXY(0, rows.get(i).get(left).getY(),
+                putStringXY(0, rows.get(i).getY(),
                     String.format(" %-" + (rowLabelWidth - 2) + "s ",
                         rows.get(i).label),
                     (i == selectedRow ? labelColorSelected : labelColor));
@@ -822,8 +827,10 @@ public class TTable extends TWidget {
                 getHeight(), '\u2502', borderColor);
         }
         for (int i = left; i < columns.size(); i++) {
-            if (columns.get(i).get(top).isVisible() == false) {
-                break;
+            if (!rows.isEmpty() && top < rows.size()) {
+                if (columns.get(i).get(top).isVisible() == false) {
+                    break;
+                }
             }
             if (columns.get(i).rightBorder == Border.SINGLE) {
                 vLineXY(columns.get(i).getX() + columns.get(i).width,
@@ -840,8 +847,10 @@ public class TTable extends TWidget {
                 myWidth, '\u2500', borderColor);
         }
         for (int i = top; i < rows.size(); i++) {
-            if (rows.get(i).get(left).isVisible() == false) {
-                break;
+            if (!columns.isEmpty() && left < columns.size()) {
+                if (rows.get(i).get(left).isVisible() == false) {
+                    break;
+                }
             }
             if (rows.get(i).bottomBorder == Border.SINGLE) {
                 hLineXY((leftBorder == Border.NONE ? 0 : 1) +
@@ -959,9 +968,9 @@ public class TTable extends TWidget {
             throw new IllegalArgumentException("Column count cannot be less " +
                 "than 1");
         }
-        if (gridRows < 1) {
+        if (gridRows < 0) {
             throw new IllegalArgumentException("Row count cannot be less " +
-                "than 1");
+                "than 0");
         }
 
         // Remove old TFields from the window.
@@ -983,10 +992,17 @@ public class TTable extends TWidget {
         highlightRow = false;
         highlightColumn = false;
 
-        // Initialize the starting row and column.
-        rows.add(new Row(0));
-        columns.add(new Column(0));
-        assert (rows.get(0).height == 1);
+        if (gridColumns > 0) {
+            for (int i = 0; i < gridColumns; i++) {
+                columns.add(new Column(i));
+            }
+        }
+
+        if (gridRows > 0) {
+            for (int i = 0; i < gridRows; i++) {
+                rows.add(new Row(i));
+            }
+        }
 
         // Place a grid of cells that fit in this space.
         for (int row = 0; row < gridRows; row++) {
@@ -1000,15 +1016,9 @@ public class TTable extends TWidget {
                 }
                 rows.get(row).add(cell);
                 columns.get(column).add(cell);
-
-                if (columns.size() < gridColumns) {
-                    columns.add(new Column(column + 1));
-                }
-            }
-            if (row < gridRows - 1) {
-                rows.add(new Row(row + 1));
             }
         }
+
         for (int i = 0; i < rows.size(); i++) {
             rows.get(i).setY(i + (showColumnLabels ? COLUMN_LABEL_HEIGHT : 0));
         }
@@ -1016,7 +1026,10 @@ public class TTable extends TWidget {
             columns.get(j).setX((j * (COLUMN_DEFAULT_WIDTH + 1)) +
                 (showRowLabels ? rowLabelWidth : 0));
         }
-        activate(columns.get(selectedColumn).get(selectedRow));
+
+        if (rows.size() > 0 && columns.size() > 0) {
+            activate(columns.get(selectedColumn).get(selectedRow));
+        }
 
         alignGrid();
     }
@@ -1057,13 +1070,9 @@ public class TTable extends TWidget {
      * @return the selected cell
      */
     public Cell getSelectedCell() {
-        assert (rows.get(selectedRow) != null);
-        assert (rows.get(selectedRow).get(selectedColumn) != null);
-        assert (columns.get(selectedColumn) != null);
-        assert (columns.get(selectedColumn).get(selectedRow) != null);
-        assert (rows.get(selectedRow).get(selectedColumn) ==
-            columns.get(selectedColumn).get(selectedRow));
-
+        if (rows.isEmpty() || columns.isEmpty()) {
+            return null;
+        }
         return (columns.get(selectedColumn).get(selectedRow));
     }
 

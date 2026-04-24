@@ -22,6 +22,7 @@ import com.idataconnect.salinas.toolkit.bits.CellAttributes;
 import com.idataconnect.salinas.toolkit.bits.ComplexCell;
 import com.idataconnect.salinas.toolkit.bits.GraphicsChars;
 import com.idataconnect.salinas.toolkit.bits.MnemonicString;
+import com.idataconnect.salinas.toolkit.TKeypress;
 import com.idataconnect.salinas.toolkit.bits.StringUtils;
 import com.idataconnect.salinas.toolkit.event.TKeypressEvent;
 import com.idataconnect.salinas.toolkit.event.TMouseEvent;
@@ -135,10 +136,21 @@ public class TMenuItem extends TWidget {
         setY(y);
         setHeight(1);
         this.label = mnemonic.getRawLabel();
-        if (parent.useIcons) {
-            setWidth(StringUtils.width(label) + 6);
+        int itemWidth;
+        int tabIdx = label.indexOf('\t');
+        if (tabIdx != -1) {
+            String labelText = label.substring(0, tabIdx);
+            String keyText = label.substring(tabIdx + 1);
+            this.key = TKeypress.parse(keyText);
+            itemWidth = StringUtils.width(labelText) + 4 +
+                StringUtils.width(keyText);
         } else {
-            setWidth(StringUtils.width(label) + 4);
+            itemWidth = StringUtils.width(label);
+        }
+        if (parent.useIcons) {
+            setWidth(itemWidth + 6);
+        } else {
+            setWidth(itemWidth + 4);
         }
         this.id = id;
         this.icon = icon;
@@ -263,8 +275,18 @@ public class TMenuItem extends TWidget {
         vLineXY(getWidth() - 1, 0, 1, cVSide, background);
 
         hLineXY(1, 0, getWidth() - 2, ' ', menuColor);
-        putStringXY(2 + (useIcons ? 2 : 0), 0, mnemonic.getRawLabel(),
-            menuColor);
+        String rawLabel = mnemonic.getRawLabel();
+        int tabIdx = rawLabel.indexOf('\t');
+        if (tabIdx != -1) {
+            String labelText = rawLabel.substring(0, tabIdx);
+            String keyText = rawLabel.substring(tabIdx + 1);
+            putStringXY(2 + (useIcons ? 2 : 0), 0, labelText, menuColor);
+            putStringXY(getWidth() - StringUtils.width(keyText) - 2, 0,
+                keyText, menuColor);
+        } else {
+            putStringXY(2 + (useIcons ? 2 : 0), 0, rawLabel, menuColor);
+        }
+
         if (key != null) {
             String keyLabel = key.toString();
             putStringXY((getWidth() - StringUtils.width(keyLabel) - 2), 0,

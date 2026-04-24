@@ -79,8 +79,10 @@ public class TEditorWindow extends TScrollableWindow {
     @SuppressWarnings("this-escape")
     public TEditorWindow(final TApplication parent, final String title) {
 
-        super(parent, title, 0, 0, parent.getScreen().getWidth(),
-            parent.getDesktopBottom() - parent.getDesktopTop(), RESIZABLE);
+        super(parent, title, 0, 0,
+            Math.min(80, parent.getScreen().getWidth()),
+            Math.min(30, parent.getDesktopBottom() - parent.getDesktopTop()),
+            RESIZABLE | CENTERED);
         i18n = ResourceBundle.getBundle(TEditorWindow.class.getName(),
             getLocale());
 
@@ -100,8 +102,10 @@ public class TEditorWindow extends TScrollableWindow {
     public TEditorWindow(final TApplication parent, final String title,
         final String contents) {
 
-        super(parent, title, 0, 0, parent.getScreen().getWidth(),
-            parent.getDesktopBottom() - parent.getDesktopTop(), RESIZABLE);
+        super(parent, title, 0, 0,
+            Math.min(80, parent.getScreen().getWidth()),
+            Math.min(30, parent.getDesktopBottom() - parent.getDesktopTop()),
+            RESIZABLE | CENTERED);
         i18n = ResourceBundle.getBundle(TEditorWindow.class.getName(),
             getLocale());
 
@@ -121,8 +125,10 @@ public class TEditorWindow extends TScrollableWindow {
     public TEditorWindow(final TApplication parent,
         final File file) throws IOException {
 
-        super(parent, file.getName(), 0, 0, parent.getScreen().getWidth(),
-            parent.getDesktopBottom() - parent.getDesktopTop(), RESIZABLE);
+        super(parent, file.getName(), 0, 0,
+            Math.min(80, parent.getScreen().getWidth()),
+            Math.min(30, parent.getDesktopBottom() - parent.getDesktopTop()),
+            RESIZABLE | CENTERED);
         i18n = ResourceBundle.getBundle(TEditorWindow.class.getName(),
             getLocale());
 

@@ -857,7 +857,9 @@ public class TMenu extends TWindow {
         assert (newY < getHeight());
 
         TMenuItem menuItem = new TMenuItem(this, id, 1, newY, label, icon);
-        menuItem.setKey(key);
+        if (key != null) {
+            menuItem.setKey(key);
+        }
         menuItem.setEnabled(enabled);
         setHeight(getHeight() + 1);
         if (menuItem.getWidth() + 2 > getWidth()) {

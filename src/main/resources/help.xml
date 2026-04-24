@@ -48,11 +48,15 @@
       </text>
     </topic>
 
-    <topic title="Copyright Infomation">
+    <topic title="Copyright Information">
       <text>
         Written 2013-2025 by Autumn Lamonte
 
         Dedicated to the public domain.
+
+        salinas-toolkit is a fork of the public domain release of Casciian v1.
+        It is maintained for the benefit of the salinas-ui project, with the
+        hope that it will also serve the larger community.
     </text>
     </topic>
 
