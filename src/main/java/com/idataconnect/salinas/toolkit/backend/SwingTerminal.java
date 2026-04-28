@@ -2154,6 +2154,10 @@ public class SwingTerminal extends LogicalScreen
         ) {
             // Triple-buffering: we have to redraw everything on this thread.
             Graphics gr = swing.getBufferStrategy().getDrawGraphics();
+            if (swing.getComponent() != null) {
+                java.awt.Insets insets = swing.getFrame().getInsets();
+                gr.translate(insets.left, insets.top);
+            }
             swing.paint(gr);
             gr.dispose();
             syncSwingBuffer();
@@ -2240,6 +2244,10 @@ public class SwingTerminal extends LogicalScreen
             // This path should never be taken, but is left here for
             // completeness.
             Graphics gr = swing.getBufferStrategy().getDrawGraphics();
+            if (swing.getComponent() != null) {
+                java.awt.Insets insets = swing.getFrame().getInsets();
+                gr.translate(insets.left, insets.top);
+            }
             Rectangle bounds = new Rectangle(xMin, yMin, xMax - xMin,
                 yMax - yMin);
             gr.setClip(bounds);
