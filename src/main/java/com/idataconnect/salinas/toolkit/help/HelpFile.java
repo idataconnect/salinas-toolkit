@@ -108,7 +108,10 @@ public class HelpFile {
     // ------------------------------------------------------------------------
 
     /**
-     * Load a help file from an input stream.
+     * Load a help file from an input stream.  This replaces any topics
+     * previously loaded into this HelpFile.  To add topics on top of an
+     * existing set without discarding them, use {@link #merge(InputStream)}
+     * instead.
      *
      * @param input the input strem
      * @throws IOException if an I/O error occurs
@@ -118,8 +121,40 @@ public class HelpFile {
     public void load(final InputStream input) throws IOException,
                                 ParserConfigurationException, SAXException {
 
+        // Discard anything loaded previously, then merge the new input in.
         topicsByTitle = new HashMap<String, Topic>();
         topicsByTerm = new HashMap<String, Topic>();
+        merge(input);
+    }
+
+    /**
+     * Merge additional topics from an input stream into this help file,
+     * keeping topics that were already loaded.  Topics whose titles match
+     * topics already present replace the earlier ones (last loaded wins),
+     * which lets a downstream application override an individual built-in
+     * topic without copying the rest.  The table of contents and index are
+     * regenerated to reflect the combined set.
+     *
+     * <p>A null input (for example, a classpath resource that does not
+     * exist) is treated as "no additional topics" rather than an error, so
+     * callers may merge optional help files unconditionally.
+     *
+     * @param input the input stream, or null for no additional topics
+     * @throws IOException if an I/O error occurs
+     * @throws ParserConfigurationException if no XML parser is available
+     * @throws SAXException if XML parsing fails
+     */
+    public void merge(final InputStream input) throws IOException,
+                                ParserConfigurationException, SAXException {
+
+        // The maps may be null if merge() is the very first thing called on
+        // a freshly constructed HelpFile.
+        if (topicsByTitle == null) {
+            topicsByTitle = new HashMap<String, Topic>();
+        }
+        if (topicsByTerm == null) {
+            topicsByTerm = new HashMap<String, Topic>();
+        }
 
         try {
             // Null check, in case input was loaded from ClassLoader from a
@@ -128,7 +163,7 @@ public class HelpFile {
                 loadTopics(input);
             }
         } finally {
-            // Always generate the TOC and Index from what was read.
+            // Always (re)generate the TOC and Index from what was read.
             generateTableOfContents();
             generateIndex();
         }
@@ -309,8 +344,10 @@ public class HelpFile {
         }
         Document doc = domBuilder.parse(input);
 
-        // Get the document's root XML node
-        Node root = doc.getChildNodes().item(0);
+        // Get the document's root XML node.  Use getDocumentElement() rather
+        // than the first child node, so that leading comments or processing
+        // instructions before the root element do not get mistaken for it.
+        Node root = doc.getDocumentElement();
         NodeList level1 = root.getChildNodes();
         for (int i = 0; i < level1.getLength(); i++) {
             Node node = level1.item(i);

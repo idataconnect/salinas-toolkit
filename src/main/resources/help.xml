@@ -8,43 +8,152 @@
   <topics>
     <topic title="Help">
       <text>
-        This [window](Windows) does not have a specific help topic.
-        See [here](Help On Help) for general information on using the
-        help system.
+        This [window](Windows) does not have a specific help topic of its
+        own.  See [Help On Help](Help On Help) for how to find your way
+        around, or pick one of the topics from the table of contents.
       </text>
     </topic>
     <topic title="Help On Help">
       <text>
-        The #{help} system...
+        The #{help} system is itself a [window](Windows), so everything
+        you know about moving and closing windows works here too.  Press
+        F1 at any time to open help for whatever you are currently doing.
 
+        Words shown in a different colour are #{links}.  Press Tab and
+        Shift-Tab to move between the links on a page, then press Enter to
+        follow the one that is highlighted; you can also click a link with
+        the mouse.  Use the arrow keys, Page Up, and Page Down to scroll
+        through a topic that is longer than the window.
+
+        Every topic is listed in the #{table of contents}, and important
+        terms are gathered in the #{index}; both are reachable from the
+        help window so you can jump straight to what you need.  When you
+        are finished, close the help window with Ctrl-W or its close box,
+        the same as any other [window](Windows).
+
+        See also [Menus](Menus) and [Windows](Windows).
       </text>
     </topic>
 
     <topic title="Menus">
       <text>
-        #{Menus} do ...
+        #{Menus} run along the top of the screen and group related
+        commands together.  Open a menu by clicking its title with the
+        mouse, or press Alt plus the highlighted letter in the menu
+        title (for example, Alt-F opens the File menu).
+
+        Once a menu is open, use the up and down arrow keys to move
+        between items and press Enter to choose one.  The left and right
+        arrow keys move to the neighbouring menu.  Press Escape to close
+        the menu without choosing anything.
+
+        Many menu items show an #{accelerator} key on the right, such as
+        Ctrl-X or F2.  You can press that key at any time to run the
+        command directly, without opening the menu first.
+
+        Items that are dimmed are not available right now; they usually
+        become active once a [window](Windows) of the right kind has
+        focus.
+
+        See also [Windows](Windows) and [Help On Help](Help On Help).
       </text>
     </topic>
 
     <topic title="Windows">
       <text>
-        #{Windows} do ...
+        #{Windows} in this toolkit follow the classic DOS-style pattern:
+        framed, overlapping panels driven mostly from the keyboard.  If
+        you have only ever used windows you swipe or click, the ideas
+        will be familiar but the controls below are worth a quick read.
+
+        Several windows can be open at once, stacked on top of one
+        another.  The one in front is the #{active window} and is where
+        your keystrokes go; its border is drawn differently so you can
+        tell it apart from the rest.
+
+        To move a window, drag its title bar with the mouse, or press
+        Ctrl-F6 to enter keyboard move/resize mode and use the arrow
+        keys.  To resize a window, drag its lower-right corner, or use
+        the arrow keys while in move/resize mode and press Enter when you
+        are done.
+
+        Each window has controls on its border.  The box in the upper
+        left closes the window; the marks in the upper right maximize or
+        restore it.  You can also close the active window with Ctrl-W.
+
+        When several windows are open, press Alt-Tab (or F6) to cycle the
+        active window from front to back, and Shift-Alt-Tab (or
+        Shift-F6) to cycle the other way.  Windows can also be tiled or
+        cascaded from the Window menu so they no longer overlap.
+
+        Some windows hold a different kind of content and have their own
+        help: see [Editing Text](Editing Text),
+        [Editing Tables](Editing Tables), and
+        [Terminal Window](Terminal Window).
+
+        See also [Menus](Menus) and [Help On Help](Help On Help).
       </text>
     </topic>
 
     <topic title="Editing Text">
       <text>
-        The #{text editing} [window](Windows)...
+        The #{text editing} [window](Windows) lets you enter and change
+        text directly.  Type to insert characters at the blinking
+        #{cursor}, and use Backspace and Delete to remove the characters
+        before and after it.
+
+        Move the cursor with the arrow keys.  Home and End jump to the
+        start and end of the current line; Page Up and Page Down scroll
+        by a screenful; and Ctrl-Home and Ctrl-End jump to the very
+        beginning and end of the document.
+
+        Hold Shift while moving the cursor to #{select} text.  Selected
+        text can be cut with Ctrl-X, copied with Ctrl-C, and pasted with
+        Ctrl-V.  You can also select text by dragging with the mouse.
+        Use Ctrl-Z to undo the last change and Ctrl-Y to redo it.
+
+        See also [Editing Tables](Editing Tables) and [Windows](Windows).
       </text>
     </topic>
 
     <topic title="Editing Tables">
-      <text></text>
+      <text>
+        A #{table editing} [window](Windows) arranges data into rows and
+        columns of #{cells}.  One cell is highlighted as the current
+        cell; this is where typing and editing take place.
+
+        Move between cells with the arrow keys.  Tab and Shift-Tab move
+        right and left, and Enter moves down to the next row.  Home and
+        End jump to the first and last cell in the current row, and Page
+        Up and Page Down move a screenful of rows at a time.
+
+        To change a cell, simply move to it and begin typing, then press
+        Enter to commit the new value or Escape to cancel and keep the
+        old one.  Columns can be widened or narrowed by dragging their
+        borders with the mouse.
+
+        See also [Editing Text](Editing Text) and [Windows](Windows).
+      </text>
     </topic>
 
     <topic title="Terminal Window">
       <text>
-        The terminal window ...
+        A #{terminal window} runs a real command-line #{shell} or program
+        inside a [window](Windows).  Whatever you type goes straight to
+        that program, and its output appears in the window, just as it
+        would in a full-screen terminal.
+
+        Because your keystrokes belong to the program, the usual window
+        shortcuts are handed through to it instead.  To move or resize the
+        terminal from the keyboard, use the window's border controls or
+        the move/resize mode described under [Windows](Windows).
+
+        The window scrolls as new output arrives; use Page Up and Page
+        Down to look back over earlier output.  When the program you
+        started finishes, the terminal shows that it has exited, and
+        depending on how it was opened the window may close on its own.
+
+        See also [Windows](Windows) and [Menus](Menus).
       </text>
     </topic>
 

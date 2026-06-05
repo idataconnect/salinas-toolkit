@@ -1017,14 +1017,44 @@ public class TApplication implements Runnable {
              */
             public void run() {
                 try {
-                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
                     helpFile = new HelpFile();
+                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
                     helpFile.load(loader.getResourceAsStream("help.xml"));
+                    // Give subclasses a chance to add their own topics on top
+                    // of the built-in set.
+                    onLoadHelp(helpFile);
                 } catch (Exception e) {
                     new TExceptionDialog(TApplication.this, e);
                 }
             }
         });
+    }
+
+    /**
+     * Hook for subclasses to contribute additional help topics after the
+     * built-in help.xml has been loaded.  The default implementation does
+     * nothing.  Override this to merge one or more application-specific help
+     * files on top of the toolkit's topics, for example:
+     *
+     * <pre>
+     * protected void onLoadHelp(final HelpFile helpFile) throws Exception {
+     *     ClassLoader loader = Thread.currentThread().getContextClassLoader();
+     *     helpFile.merge(loader.getResourceAsStream("my-app-help.xml"));
+     * }
+     * </pre>
+     *
+     * Topics whose titles match built-in topics will replace them, so an
+     * application can override individual toolkit topics as well as add new
+     * ones.  This is called on the UI thread during startup, just after the
+     * built-in help file has been loaded.
+     *
+     * @param helpFile the application's help file, already populated with the
+     * built-in topics
+     * @throws Exception if loading the additional topics fails; the exception
+     * will be shown to the user in an exception dialog
+     */
+    protected void onLoadHelp(final HelpFile helpFile) throws Exception {
+        // Default: no additional topics.
     }
 
     // ------------------------------------------------------------------------
